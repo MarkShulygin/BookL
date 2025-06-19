@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: usersbd
+    ports:
+      - "5432:5432"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  api-gateway:
+    build: ./api-gateway
+    depends_on:
+      - rabbitmq
+      - postgres
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq
+    ports:
+      - "3000:3000"
+
+  user-service:
+      build: ./user-service
+      depends_on:
+        - rabbitmq
+        - postgres
+      environment:
+        RABBITMQ_URL: amqp://rabbitmq
+        DATABASE_URL: postgres://postgres:postgres@postgres:5432/usersbd
+      ports:
+        - "3001:3001"
+  
